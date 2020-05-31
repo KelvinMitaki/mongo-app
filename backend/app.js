@@ -2,7 +2,6 @@ const path = require("path");
 
 const express = require("express");
 const bodyParser = require("body-parser");
-const MongoClient = require("mongodb").MongoClient;
 
 const productRoutes = require("./routes/products");
 const authRoutes = require("./routes/auth");
@@ -25,17 +24,5 @@ app.use((req, res, next) => {
 
 app.use("/products", productRoutes);
 app.use("/", authRoutes);
-
-const mongoConnect = async () => {
-  try {
-    const client = await MongoClient.connect(process.env.MONGO_CLIENT, {
-      useUnifiedTopology: true
-    });
-    console.log("connected to database");
-  } catch (error) {
-    console.log(error);
-  }
-};
-mongoConnect();
 
 app.listen(3100);
