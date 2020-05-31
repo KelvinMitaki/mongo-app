@@ -8,17 +8,6 @@ const ObjectId = mongodb.ObjectId;
 
 // Get list of products products
 router.get("/", async (req, res, next) => {
-  // Return a list of dummy products
-  // Later, this data will be fetched from MongoDB
-  // const queryPage = req.query.page;
-  // const pageSize = 5;
-  // let resultProducts = [...products];
-  // if (queryPage) {
-  //   resultProducts = products.slice(
-  //     (queryPage - 1) * pageSize,
-  //     queryPage * pageSize
-  //   );
-  // }
   try {
     const products = [];
     await getDb()
