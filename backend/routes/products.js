@@ -4,6 +4,7 @@ const mongodb = require("mongodb");
 const { getDb } = require("../db");
 
 const router = Router();
+const ObjectId = mongodb.ObjectId;
 
 // Get list of products products
 router.get("/", async (req, res, next) => {
@@ -35,9 +36,17 @@ router.get("/", async (req, res, next) => {
 });
 
 // Get single product
-router.get("/:id", (req, res, next) => {
-  const product = products.find(p => p._id === req.params.id);
-  res.json(product);
+router.get("/:id", async (req, res, next) => {
+  try {
+    const product = await getDb()
+      .db()
+      .collection("products")
+      .findOne({ _id: new ObjectId(req.params.id) });
+    product.price = product.price.toString();
+    res.send(product);
+  } catch (error) {
+    res.status(500).send(error);
+  }
 });
 
 // Add new product
