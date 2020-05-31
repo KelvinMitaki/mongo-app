@@ -74,21 +74,40 @@ router.post("", async (req, res, next) => {
 
 // Edit existing product
 // Requires logged in user
-router.patch("/:id", (req, res, next) => {
-  const updatedProduct = {
-    name: req.body.name,
-    description: req.body.description,
-    price: parseFloat(req.body.price), // store this as 128bit decimal in MongoDB
-    image: req.body.image
-  };
-  console.log(updatedProduct);
-  res.status(200).json({ message: "Product updated", productId: "DUMMY" });
+router.patch("/:id", async (req, res, next) => {
+  try {
+    const updatedProduct = {
+      name: req.body.name,
+      description: req.body.description,
+      price: mongodb.Decimal128.toString(req.body.price.toString()), // store this as 128bit decimal in MongoDB
+      image: req.body.image
+    };
+    const update = await getDb()
+      .db()
+      .collection("products")
+      .updateOne(
+        { _id: new ObjectId(req.params.id) },
+        { $set: { updatedProduct } }
+      );
+
+    res.status(200).send(update);
+  } catch (error) {
+    res.status(500).send(error);
+  }
 });
 
 // Delete a product
 // Requires logged in user
-router.delete("/:id", (req, res, next) => {
-  res.status(200).json({ message: "Product deleted" });
+router.delete("/:id", async (req, res, next) => {
+  try {
+    await getDb()
+      .db()
+      .collection("products")
+      .deleteOne({ _id: new ObjectId(req.params.id) });
+    res.status(200).send({ message: "Product deleted" });
+  } catch (error) {
+    res.status(500).send(error);
+  }
 });
 
 module.exports = router;
