@@ -25,6 +25,7 @@ router.get("/", async (req, res, next) => {
       .db()
       .collection("products")
       .find()
+      .sort({ _id: -1 })
       .forEach(product => {
         product.price = product.price.toString();
         products.push(product);
@@ -79,20 +80,23 @@ router.patch("/:id", async (req, res, next) => {
     const updatedProduct = {
       name: req.body.name,
       description: req.body.description,
-      price: mongodb.Decimal128.toString(req.body.price.toString()), // store this as 128bit decimal in MongoDB
+      price: mongodb.Decimal128.fromString(req.body.price.toString()), // store this as 128bit decimal in MongoDB
       image: req.body.image
     };
-    const update = await getDb()
+    await getDb()
       .db()
       .collection("products")
       .updateOne(
         { _id: new ObjectId(req.params.id) },
-        { $set: { updatedProduct } }
+        { $set: updatedProduct }
       );
 
-    res.status(200).send(update);
+    res
+      .status(200)
+      .send({ message: "Product updated", productId: req.params.id });
   } catch (error) {
     res.status(500).send(error);
+    console.log(error);
   }
 });
 
