@@ -54,19 +54,35 @@ const products = [
 ];
 
 // Get list of products products
-router.get("/", (req, res, next) => {
+router.get("/", async (req, res, next) => {
   // Return a list of dummy products
   // Later, this data will be fetched from MongoDB
-  const queryPage = req.query.page;
-  const pageSize = 5;
-  let resultProducts = [...products];
-  if (queryPage) {
-    resultProducts = products.slice(
-      (queryPage - 1) * pageSize,
-      queryPage * pageSize
-    );
+  // const queryPage = req.query.page;
+  // const pageSize = 5;
+  // let resultProducts = [...products];
+  // if (queryPage) {
+  //   resultProducts = products.slice(
+  //     (queryPage - 1) * pageSize,
+  //     queryPage * pageSize
+  //   );
+  // }
+  try {
+    const client = await MongoClient.connect(process.env.MONGO_CLIENT, {
+      useUnifiedTopology: true
+    });
+    const products = [];
+    await client
+      .db()
+      .collection("products")
+      .find()
+      .forEach(product => {
+        product.price = product.price.toString();
+        products.push(product);
+      });
+    res.status(201).send(products);
+  } catch (error) {
+    res.status(500).send(error);
   }
-  res.json(resultProducts);
 });
 
 // Get single product
@@ -81,17 +97,23 @@ router.post("", async (req, res, next) => {
   const newProduct = {
     name: req.body.name,
     description: req.body.description,
-    price: parseFloat(req.body.price), // store this as 128bit decimal in MongoDB
+    price: mongodb.Decimal128.fromString(req.body.price.toString()), // store this as 128bit decimal in MongoDB
     image: req.body.image
   };
   try {
     const client = await MongoClient.connect(process.env.MONGO_CLIENT, {
       useUnifiedTopology: true
     });
-    client.db().collection("products").insertOne(newProduct);
-    res.status(201).json({ message: "Product added", productId: "DUMMY" });
+    const result = await client
+      .db()
+      .collection("products")
+      .insertOne(newProduct);
+    console.log(result);
+    res
+      .status(201)
+      .send({ message: "Product added", productId: result.insertedId });
   } catch (error) {
-    console.log(error);
+    res.status(500).send(error);
   }
 });
 
