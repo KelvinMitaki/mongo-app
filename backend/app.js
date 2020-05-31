@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 
 const productRoutes = require("./routes/products");
 const authRoutes = require("./routes/auth");
+const { initDb } = require("./db");
 
 const app = express();
 
@@ -25,4 +26,9 @@ app.use((req, res, next) => {
 app.use("/products", productRoutes);
 app.use("/", authRoutes);
 
-app.listen(3100);
+initDb((err, db) => {
+  if (err) {
+    return console.log(err);
+  }
+  app.listen(3100, () => console.log("server started on port 3100"));
+});
